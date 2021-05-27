@@ -97,17 +97,25 @@ CREATE OR REPLACE PROCEDURE update_persons()
 AS
 $body$
 DECLARE
-    num integer;
-    random integer;
+    row       record;
+    random    integer;
+    selection integer;
 BEGIN
-    FOR number IN 1..500 BY 3
+    SELECT 0 INTO selection;
+    SELECT floor(random() * 3) INTO random;
+    FOR row IN SELECT persons.id FROM persons ORDER BY id
         LOOP
-            SELECT floor(random() * 3) INTO random;
-            SELECT number + random INTO num;
-            RAISE NOTICE 'num: % random: % star: % end: %', num, random, number, number + 2;
-            UPDATE persons
-            SET name = 'Updated'
-            WHERE id = num;
+            IF selection = 3 THEN
+                SELECT floor(random() * 3) INTO random;
+                selection := 0;
+            END IF;
+
+            IF selection = random THEN
+                UPDATE persons
+                SET name = 'Updated'
+                WHERE id = row.id;
+            END IF;
+            selection := selection + 1;
         END LOOP;
 END;
 $body$;
