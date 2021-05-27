@@ -121,3 +121,29 @@ END;
 $body$;
 
 CALL update_persons();
+
+--  Task-6  --
+CREATE OR REPLACE PROCEDURE restore_persons()
+    LANGUAGE plpgsql
+AS
+$body$
+DECLARE
+    row record;
+BEGIN
+    FOR row IN SELECT pl.id, pl.person_id, pl.name, pl.surname, pl.birthdate FROM persons_log pl WHERE type = 'D'
+        LOOP
+            UPDATE persons_log
+            SET type = 'R'
+            WHERE id = row.id;
+            INSERT INTO persons
+            VALUES (row.person_id, row.name, row.surname, row.birthdate::date);
+        END LOOP;
+END;
+$body$;
+
+DELETE
+FROM persons
+WHERE id = 5;
+
+CALL restore_persons();
+
