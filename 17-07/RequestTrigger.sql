@@ -7,10 +7,10 @@ DECLARE
     row record;
 BEGIN
     IF (TG_OP = 'INSERT') THEN
-        FOR row IN SELECT username, company_name FROM users
+        FOR row IN SELECT username, agency_name FROM users
             LOOP
                 INSERT INTO user_requests
-                VALUES (row.company_name, row.username,
+                VALUES (row.agency_name, row.username,
                         new.uuid, FALSE, 0, NULL, NULL, NULL);
             END LOOP;
     END IF;
@@ -21,4 +21,33 @@ $BODY$;
 CREATE TRIGGER populate_user_requests_trigger
     AFTER INSERT
     ON requests
-FOR EACH ROW EXECUTE PROCEDURE populate_user_requests_function();
+    FOR EACH ROW
+EXECUTE PROCEDURE populate_user_requests_function();
+
+CREATE OR REPLACE FUNCTION update_all_user_requests()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS
+$BODY$
+DECLARE
+    row record;
+BEGIN
+    IF (TG_OP = 'UPDATE') THEN
+        IF (new.status = FALSE AND old.status = TRUE) THEN
+            FOR row IN SELECT username, agency_name FROM users
+                LOOP
+                    UPDATE user_requests
+                    SET status = 3
+                    WHERE uuid = old.uuid;
+                END LOOP;
+        END IF;
+    END IF;
+    RETURN new;
+END;
+$BODY$;
+
+CREATE TRIGGER update_all_user_trigger
+    AFTER UPDATE
+    ON requests
+    FOR EACH ROW
+EXECUTE PROCEDURE update_all_user_requests();
