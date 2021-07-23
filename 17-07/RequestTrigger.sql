@@ -10,11 +10,9 @@ BEGIN
         FOR row IN SELECT username, agency_name FROM users
             LOOP
                 INSERT INTO user_requests
-                VALUES (row.agency_name, row.username,
-                        new.uuid, FALSE, 0, NULL, NULL, NULL);
+                VALUES (row.agency_name, new.uuid, FALSE, 0, NULL);
             END LOOP;
     END IF;
-    RETURN new;
 END;
 $BODY$;
 
@@ -37,8 +35,8 @@ BEGIN
             FOR row IN SELECT username, agency_name FROM users
                 LOOP
                     UPDATE user_requests
-                    SET status = 3
-                    WHERE uuid = old.uuid;
+                    SET status = 3, is_archived = true
+                    WHERE uuid = old.uuid AND status = 0;
                 END LOOP;
         END IF;
     END IF;
