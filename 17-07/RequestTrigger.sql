@@ -13,6 +13,7 @@ BEGIN
                 VALUES (row.agency_name, new.uuid, FALSE, 0, NULL);
             END LOOP;
     END IF;
+    RETURN new;
 END;
 $BODY$;
 
